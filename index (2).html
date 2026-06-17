@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Insertion Sort – Struktur Data</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:       #0f1117;
+      --surface:  #181c27;
+      --border:   #252a3a;
+      --text:     #e2e8f0;
+      --muted:    #64748b;
+      --accent:   #6366f1;
+      --accent2:  #818cf8;
+      --green:    #34d399;
+      --yellow:   #fbbf24;
+      --red:      #f87171;
+      --purple:   #a78bfa;
+      --bar-def:  #334155;
+      --radius:   12px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Space Grotesk', sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: linear-gradient(135deg, #1e1b4b 0%, #0f1117 60%);
+      border-bottom: 1px solid var(--border);
+      padding: 32px 24px 28px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 60% 120% at 50% 0%, rgba(99,102,241,.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(99,102,241,.15);
+      border: 1px solid rgba(99,102,241,.4);
+      color: var(--accent2);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 14px;
+    }
+    header h1 {
+      font-size: clamp(28px, 5vw, 48px);
+      font-weight: 700;
+      letter-spacing: -.02em;
+      line-height: 1.1;
+    }
+    header h1 span { color: var(--accent2); }
+    header p.sub {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .team-chips {
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+      margin-top: 18px;
+    }
+    .chip {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 5px 14px;
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    /* ── LAYOUT ── */
+    main { max-width: 1100px; margin: 0 auto; padding: 32px 20px 60px; }
+
+    section { margin-bottom: 36px; }
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--accent2);
+      margin-bottom: 16px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-title::after {
+      content: ''; flex: 1; height: 1px;
+      background: var(--border);
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+
+    /* ── CONTROLS ── */
+    .controls-row {
+      display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end;
+    }
+    .ctrl-group { display: flex; flex-direction: column; gap: 6px; }
+    .ctrl-group label { font-size: 12px; color: var(--muted); }
+    input[type="text"], input[type="range"] {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      padding: 8px 12px;
+      outline: none;
+      transition: border .2s;
+    }
+    input[type="text"] { width: 260px; }
+    input[type="text"]:focus { border-color: var(--accent); }
+    input[type="range"] {
+      padding: 0; border: none;
+      accent-color: var(--accent);
+      width: 120px; cursor: pointer;
+    }
+    .speed-val { font-size: 12px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+
+    .btn {
+      border: none; border-radius: 8px; cursor: pointer;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600; font-size: 13px;
+      padding: 9px 18px; transition: opacity .15s, transform .1s;
+    }
+    .btn:active { transform: scale(.97); }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { opacity: .85; }
+    .btn-secondary { background: var(--border); color: var(--text); }
+    .btn-secondary:hover { background: #2e3448; }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .btn-outline:hover { border-color: var(--accent2); color: var(--accent2); }
+
+    /* ── VISUALIZER ── */
+    #bars-area {
+      height: 220px;
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+      padding: 12px 0 0;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .bar-wrap {
+      display: flex; flex-direction: column; align-items: center;
+      flex: 1; height: 100%;
+      justify-content: flex-end;
+      gap: 4px;
+    }
+    .bar-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      transition: color .3s;
+    }
+    .bar {
+      width: 100%;
+      border-radius: 4px 4px 0 0;
+      transition: height .3s ease, background .2s;
+      background: var(--bar-def);
+      min-height: 4px;
+    }
+    .bar-idx {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      padding-bottom: 2px;
+    }
+
+    /* bar states */
+    .bar.sorted   { background: var(--green); }
+    .bar.current  { background: var(--accent); box-shadow: 0 0 10px rgba(99,102,241,.5); }
+    .bar.key      { background: var(--yellow); box-shadow: 0 0 10px rgba(251,191,36,.4); }
+    .bar.compare  { background: var(--purple); }
+    .bar.swapping { background: var(--red); }
+
+    /* ── LEGEND ── */
+    .legend {
+      display: flex; flex-wrap: wrap; gap: 12px;
+      font-size: 12px;
+    }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .dot {
+      width: 10px; height: 10px;
+      border-radius: 3px;
+    }
+
+    /* ── STEP LOG ── */
+    #step-log {
+      min-height: 40px;
+      padding: 12px 16px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 13px;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      line-height: 1.6;
+      margin-top: 12px;
+    }
+    #step-log .hl { color: var(--yellow); font-weight: 600; }
+    #step-log .hl2 { color: var(--accent2); }
+    #step-log .hl3 { color: var(--green); }
+
+    /* ── STATS ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+    }
+    .stat-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      text-align: center;
+    }
+    .stat-num {
+      font-size: 28px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--accent2);
+    }
+    .stat-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    /* ── PSEUDOCODE ── */
+    pre#pseudocode {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 1.8;
+      color: var(--text);
+      overflow-x: auto;
+      counter-reset: line;
+    }
+    pre#pseudocode .line { display: block; padding: 1px 0; border-radius: 4px; transition: background .2s; }
+    pre#pseudocode .line.active { background: rgba(99,102,241,.15); color: var(--accent2); }
+    pre#pseudocode .kw { color: var(--purple); }
+    pre#pseudocode .cm { color: var(--muted); }
+    pre#pseudocode .num { color: var(--yellow); }
+
+    /* ── MATERI ── */
+    .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+    .info-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+    }
+    .info-box h4 { font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--accent2); }
+    .info-box p, .info-box li { font-size: 13px; color: var(--muted); line-height: 1.7; }
+    .info-box ul { padding-left: 16px; }
+    .complexity-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .complexity-table th, .complexity-table td {
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+    .complexity-table th { background: var(--surface); color: var(--accent2); font-weight: 600; }
+    .complexity-table td { background: var(--bg); color: var(--text); font-family: 'JetBrains Mono', monospace; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      input[type="text"] { width: 100%; }
+      .controls-row { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="badge">Struktur Data · STMIK Banjarbaru</div>
+  <h1>Insertion <span>Sort</span></h1>
+  <p class="sub">Visualisasi Interaktif Algoritma Pengurutan</p>
+  <div class="team-chips">
+    <span class="chip">👤 Annurinsyah</span>
+    <span class="chip">🆔 NIM: 310125023936</span>
+  </div>
+</header>
+
+<main>
+
+  <!-- CONTROLS -->
+  <section>
+    <div class="section-title">Input &amp; Kontrol</div>
+    <div class="card">
+      <div class="controls-row">
+        <div class="ctrl-group">
+          <label>Array (pisahkan dengan koma)</label>
+          <input type="text" id="arr-input" value="64, 25, 12, 22, 11" placeholder="cth: 5, 3, 8, 1, 9"/>
+        </div>
+        <div class="ctrl-group">
+          <label>Kecepatan animasi</label>
+          <input type="range" id="speed-range" min="100" max="1500" value="700"/>
+          <span class="speed-val" id="speed-label">700 ms</span>
+        </div>
+        <button class="btn btn-secondary" onclick="randomArray()">🎲 Acak</button>
+        <button class="btn btn-primary" id="btn-play" onclick="startSort()">▶ Mulai</button>
+        <button class="btn btn-outline" id="btn-step" onclick="stepSort()">⏭ Langkah</button>
+        <button class="btn btn-outline" onclick="resetAll()">↺ Reset</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- VISUALIZER -->
+  <section>
+    <div class="section-title">Visualisasi Array</div>
+    <div class="card">
+      <div id="bars-area"></div>
+      <div class="legend">
+        <div class="legend-item"><div class="dot" style="background:var(--bar-def)"></div> Belum diproses</div>
+        <div class="legend-item"><div class="dot" style="background:var(--yellow)"></div> Elemen kunci (key)</div>
+        <div class="legend-item"><div class="dot" style="background:var(--purple)"></div> Dibandingkan</div>
+        <div class="legend-item"><div class="dot" style="background:var(--red)"></div> Bergeser</div>
+        <div class="legend-item"><div class="dot" style="background:var(--green)"></div> Sudah terurut</div>
+      </div>
+      <div id="step-log">Masukkan array lalu tekan <strong>Mulai</strong> atau <strong>Langkah</strong>.</div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section>
+    <div class="section-title">Statistik</div>
+    <div class="stats-grid">
+      <div class="stat-box"><div class="stat-num" id="s-cmp">0</div><div class="stat-label">Perbandingan</div></div>
+      <div class="stat-box"><div class="stat-num" id="s-shf">0</div><div class="stat-label">Pergeseran</div></div>
+      <div class="stat-box"><div class="stat-num" id="s-pass">0</div><div class="stat-label">Pass / Iterasi</div></div>
+      <div class="stat-box"><div class="stat-num" id="s-size">0</div><div class="stat-label">Ukuran Array</div></div>
+    </div>
+  </section>
+
+  <!-- PSEUDOCODE -->
+  <section>
+    <div class="section-title">Pseudocode</div>
+    <div class="card">
+      <pre id="pseudocode">
+<span class="line" id="pc0"><span class="kw">procedure</span> InsertionSort(A[0..n-1])</span>
+<span class="line" id="pc1">  <span class="cm">// Urutkan array A secara ascending</span></span>
+<span class="line" id="pc2">  <span class="kw">for</span> i ← <span class="num">1</span> <span class="kw">to</span> n - <span class="num">1</span> <span class="kw">do</span></span>
+<span class="line" id="pc3">    key ← A[i]       <span class="cm">// simpan elemen kunci</span></span>
+<span class="line" id="pc4">    j ← i - <span class="num">1</span></span>
+<span class="line" id="pc5">    <span class="kw">while</span> j ≥ <span class="num">0</span> <span class="kw">and</span> A[j] > key <span class="kw">do</span></span>
+<span class="line" id="pc6">      A[j + <span class="num">1</span>] ← A[j]  <span class="cm">// geser elemen ke kanan</span></span>
+<span class="line" id="pc7">      j ← j - <span class="num">1</span></span>
+<span class="line" id="pc8">    <span class="kw">end while</span></span>
+<span class="line" id="pc9">    A[j + <span class="num">1</span>] ← key   <span class="cm">// tempatkan key di posisi yang tepat</span></span>
+<span class="line" id="pc10">  <span class="kw">end for</span></span>
+<span class="line" id="pc11"><span class="kw">end procedure</span></span>
+      </pre>
+    </div>
+  </section>
+
+  <!-- MATERI -->
+  <section>
+    <div class="section-title">Materi Insertion Sort</div>
+    <div class="info-grid">
+      <div class="info-box">
+        <h4>📖 Pengertian</h4>
+        <p>Insertion Sort adalah algoritma pengurutan yang bekerja seperti cara manusia mengurutkan kartu. Setiap elemen baru "disisipkan" ke posisi yang tepat di antara elemen-elemen yang sudah terurut sebelumnya.</p>
+      </div>
+      <div class="info-box">
+        <h4>⚙️ Cara Kerja</h4>
+        <ul>
+          <li>Mulai dari elemen indeks ke-1</li>
+          <li>Simpan elemen tersebut sebagai <em>key</em></li>
+          <li>Bandingkan key dengan elemen di kiri</li>
+          <li>Geser elemen yang lebih besar ke kanan</li>
+          <li>Sisipkan key ke posisi yang kosong</li>
+          <li>Ulangi sampai seluruh array terurut</li>
+        </ul>
+      </div>
+      <div class="info-box">
+        <h4>✅ Keunggulan</h4>
+        <ul>
+          <li>Efisien untuk data kecil</li>
+          <li>Stabil (urutan elemen sama tidak berubah)</li>
+          <li>Adaptif — cepat untuk data hampir terurut</li>
+          <li>In-place (tidak butuh memori tambahan)</li>
+          <li>Mudah diimplementasikan</li>
+        </ul>
+      </div>
+      <div class="info-box">
+        <h4>⚠️ Kelemahan</h4>
+        <ul>
+          <li>Lambat untuk data besar (O(n²))</li>
+          <li>Tidak efisien jika data acak sepenuhnya</li>
+          <li>Kalah dengan Quick Sort / Merge Sort untuk n besar</li>
+        </ul>
+      </div>
+    </div>
+
+    <div style="margin-top:16px">
+      <table class="complexity-table">
+        <thead>
+          <tr>
+            <th>Kasus</th>
+            <th>Time Complexity</th>
+            <th>Space Complexity</th>
+            <th>Keterangan</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Terbaik (Best)</td><td>O(n)</td><td>O(1)</td><td>Array sudah terurut</td></tr>
+          <tr><td>Rata-rata (Average)</td><td>O(n²)</td><td>O(1)</td><td>Data acak</td></tr>
+          <tr><td>Terburuk (Worst)</td><td>O(n²)</td><td>O(1)</td><td>Array terurut terbalik</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  // ── STATE ──
+  let arr = [], steps = [], stepIdx = 0, playing = false, timer = null;
+  let cmpCount = 0, shiftCount = 0;
+
+  // ── UTILS ──
+  function getSpeed() { return parseInt(document.getElementById('speed-range').value); }
+
+  document.getElementById('speed-range').addEventListener('input', function() {
+    document.getElementById('speed-label').textContent = this.value + ' ms';
+    if (playing) { clearInterval(timer); playLoop(); }
+  });
+
+  function parseArr() {
+    return document.getElementById('arr-input').value
+      .split(',').map(x => parseInt(x.trim())).filter(n => !isNaN(n));
+  }
+
+  function randomArray() {
+    const size = Math.floor(Math.random() * 6) + 5;
+    const a = Array.from({length: size}, () => Math.floor(Math.random() * 90) + 5);
+    document.getElementById('arr-input').value = a.join(', ');
+    resetAll();
+  }
+
+  // ── STEP GENERATION ──
+  function generateSteps(input) {
+    const a = [...input];
+    const n = a.length;
+    const steps = [];
+    const sorted = new Set();
+    sorted.add(0); // index 0 is trivially sorted at start
+
+    steps.push({ arr: [...a], sorted: [...sorted], phase: 'init',
+      log: `Array awal: [${a.join(', ')}] — elemen pertama (indeks 0) sudah dianggap terurut.`,
+      pc: 0 });
+
+    for (let i = 1; i < n; i++) {
+      const key = a[i];
+      steps.push({ arr: [...a], key: i, sorted: [...sorted], phase: 'pick',
+        log: `Pass ${i}: Ambil key = <span class="hl">${key}</span> (indeks ${i}). Akan disisipkan ke posisi yang tepat.`,
+        pc: [2, 3, 4], pass: i });
+
+      let j = i - 1;
+      let shifted = false;
+      while (j >= 0 && a[j] > key) {
+        steps.push({ arr: [...a], key: i, compare: j, sorted: [...sorted], phase: 'compare',
+          log: `Bandingkan A[${j}] = <span class="hl2">${a[j]}</span> dengan key = <span class="hl">${key}</span>. Karena ${a[j]} > ${key}, geser A[${j}] ke kanan.`,
+          pc: [5, 6, 7] });
+        a[j + 1] = a[j];
+        shifted = true;
+        steps.push({ arr: [...a], key: j + 1, shifted: j, sorted: [...sorted], phase: 'shift',
+          log: `Geser <span class="hl2">${a[j+1]}</span> ke posisi ${j + 1}.`,
+          pc: 6 });
+        j--;
+      }
+      if (!shifted) {
+        steps.push({ arr: [...a], key: i, compare: j, sorted: [...sorted], phase: 'noshift',
+          log: `A[${j}] = <span class="hl2">${a[j]}</span> ≤ key = <span class="hl">${key}</span>. Tidak perlu geser.`,
+          pc: 5 });
+      }
+      a[j + 1] = key;
+      sorted.add(i);
+      for(let k=0; k<=i; k++) sorted.add(k);
+      steps.push({ arr: [...a], inserted: j + 1, sorted: [...sorted], phase: 'insert',
+        log: `Sisipkan key <span class="hl">${key}</span> ke posisi ${j+1}. Subarray [0..${i}] sudah terurut: <span class="hl3">[${a.slice(0,i+1).join(', ')}]</span>`,
+        pc: 9 });
+    }
+
+    steps.push({ arr: [...a], sorted: Array.from({length:n},(_,k)=>k), phase: 'done',
+      log: `<span class="hl3">✓ Sorting selesai!</span> Array terurut: <span class="hl3">[${a.join(', ')}]</span>`,
+      pc: 11 });
+
+    return steps;
+  }
+
+  // ── RENDER ──
+  function renderBars(state) {
+    const area = document.getElementById('bars-area');
+    area.innerHTML = '';
+    const max = Math.max(...state.arr);
+    state.arr.forEach((v, i) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'bar-wrap';
+
+      const val = document.createElement('div');
+      val.className = 'bar-val';
+      val.textContent = v;
+
+      const bar = document.createElement('div');
+      bar.className = 'bar';
+      bar.style.height = `${Math.max(8, Math.round((v / max) * 180))}px`;
+
+      // color state
+      const sorted = new Set(state.sorted || []);
+      if (state.phase === 'done' || sorted.has(i)) {
+        bar.classList.add('sorted');
+        val.style.color = 'var(--green)';
+      }
+      if (state.key === i) { bar.classList.remove('sorted'); bar.classList.add('key'); val.style.color = 'var(--yellow)'; }
+      if (state.compare === i) { bar.classList.add('compare'); val.style.color = 'var(--purple)'; }
+      if (state.shifted === i || state.phase === 'shift' && state.key - 1 === i) {
+        bar.classList.add('swapping');
+        val.style.color = 'var(--red)';
+      }
+      if (state.inserted === i) { bar.classList.add('key'); val.style.color = 'var(--yellow)'; }
+
+      const idx = document.createElement('div');
+      idx.className = 'bar-idx';
+      idx.textContent = i;
+
+      wrap.appendChild(val);
+      wrap.appendChild(bar);
+      wrap.appendChild(idx);
+      area.appendChild(wrap);
+    });
+
+    // log
+    document.getElementById('step-log').innerHTML = state.log || '';
+
+    // stats
+    if (state.phase !== 'init') {
+      if (['compare','noshift'].includes(state.phase)) cmpCount++;
+      if (state.phase === 'shift') shiftCount++;
+      if (state.pass !== undefined) document.getElementById('s-pass').textContent = state.pass;
+    }
+    document.getElementById('s-cmp').textContent = cmpCount;
+    document.getElementById('s-shf').textContent = shiftCount;
+
+    // pseudocode highlight
+    document.querySelectorAll('#pseudocode .line').forEach(l => l.classList.remove('active'));
+    const pcs = Array.isArray(state.pc) ? state.pc : (state.pc !== undefined ? [state.pc] : []);
+    pcs.forEach(n => {
+      const el = document.getElementById('pc' + n);
+      if (el) el.classList.add('active');
+    });
+  }
+
+  // ── CONTROLS ──
+  function startSort() {
+    if (playing) { pauseSort(); return; }
+    if (stepIdx === 0) {
+      arr = parseArr();
+      if (arr.length < 2) { alert('Masukkan minimal 2 angka!'); return; }
+      document.getElementById('s-size').textContent = arr.length;
+      cmpCount = 0; shiftCount = 0;
+      document.getElementById('s-pass').textContent = 0;
+      steps = generateSteps(arr);
+      renderBars(steps[0]);
+    }
+    playing = true;
+    document.getElementById('btn-play').textContent = '⏸ Pause';
+    playLoop();
+  }
+
+  function playLoop() {
+    timer = setInterval(() => {
+      if (stepIdx >= steps.length - 1) {
+        clearInterval(timer); playing = false;
+        document.getElementById('btn-play').textContent = '▶ Mulai';
+        renderBars(steps[steps.length - 1]);
+        return;
+      }
+      stepIdx++;
+      renderBars(steps[stepIdx]);
+    }, getSpeed());
+  }
+
+  function pauseSort() {
+    clearInterval(timer); playing = false;
+    document.getElementById('btn-play').textContent = '▶ Lanjut';
+  }
+
+  function stepSort() {
+    if (playing) { pauseSort(); return; }
+    if (steps.length === 0) {
+      arr = parseArr();
+      if (arr.length < 2) { alert('Masukkan minimal 2 angka!'); return; }
+      document.getElementById('s-size').textContent = arr.length;
+      cmpCount = 0; shiftCount = 0;
+      document.getElementById('s-pass').textContent = 0;
+      steps = generateSteps(arr);
+      stepIdx = 0;
+      renderBars(steps[0]);
+      return;
+    }
+    if (stepIdx < steps.length - 1) {
+      stepIdx++;
+      renderBars(steps[stepIdx]);
+    }
+  }
+
+  function resetAll() {
+    clearInterval(timer); playing = false; steps = []; stepIdx = 0;
+    cmpCount = 0; shiftCount = 0;
+    document.getElementById('s-cmp').textContent = 0;
+    document.getElementById('s-shf').textContent = 0;
+    document.getElementById('s-pass').textContent = 0;
+    document.getElementById('s-size').textContent = 0;
+    document.getElementById('step-log').innerHTML = 'Masukkan array lalu tekan <strong>Mulai</strong> atau <strong>Langkah</strong>.';
+    document.getElementById('btn-play').textContent = '▶ Mulai';
+    document.querySelectorAll('#pseudocode .line').forEach(l => l.classList.remove('active'));
+    document.getElementById('bars-area').innerHTML = '';
+  }
+
+  // ── INIT ──
+  (function() {
+    arr = parseArr();
+    if (arr.length >= 2) {
+      document.getElementById('s-size').textContent = arr.length;
+      steps = generateSteps(arr);
+      renderBars(steps[0]);
+    }
+  })();
+</script>
+</body>
+</html>
